@@ -22,7 +22,7 @@ Real screenshots of *your* Cortex running. These are the `00-build/CORTEX-ANATOM
 | # | Screenshot | What it shows | From |
 |---|---|---|---|
 | 1 | ![Happy-path run: gather, stories queued, draft](screenshots/m2-happy-path-run.png) ![Critic pass and HITL checkpoint](screenshots/m2-happy-path-hitl.png) | happy-path run: a real drafted update + the HITL checkpoint (queued, not posted). Cortex pulls 5 sources, queues 5 build stories, drafts a Green update; the critic re-pulls 3 sources and passes it; the run stops at the HITL checkpoint at $0.135 of a $0.50 cap. | M2 |
-| 2 | _[img]_ | the critic rejecting a bad draft (revise/block) | M3 |
+| 2 | ![Critic rejecting a stale-data draft](screenshots/m3-critic-reject.png) | the critic rejecting a bad draft: a Sev-1 (#821) appears after Cortex's pull; the critic's independent re-pull catches the "Green, no Sev-1" draft (plus a wrong "#818 finalized" claim) → `fail` → revise 1/2 → Cortex fixes and escalates; held for PM, nothing posted, $0.43 of $0.50 cap. | M3 |
 | 3 | _[img]_ | a grounded update citing pulled activity + a caught hallucination | M4 |
 | 4 | _[img]_ | jailbreak refused + escalated | M5 |
 | 5 | _[img]_ | an iteration/cost/queue bound halting a runaway | M5 |

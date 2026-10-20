@@ -8,40 +8,57 @@
 
 ## 1. Why split? (or why not)
 
-_Run the default-to-simple check. Do you actually need subagents/a fleet? What's the real reason (separation of concerns · parallelism · independent validation · context-window pressure)? If not, say so and stop here._
+**Decision: split, but only once.** Cortex stays a single agent plus **one** validating subagent, the critic.
+
+**One-line design:** Cortex gathers, analyzes and drafts the status update and stories, then a separate critic checks the draft (max 2 fix rounds) before it's held for PM review.
+
+| Reason | Applies? | Why / why not |
+|---|---|---|
+| Independent validator | Yes | Can't grade its own homework. False negatives are a big gap. |
+| Separation of concerns | No | Gather, analyze and draft feed one draft and share one trace. Splitting them adds hand-offs without stopping any real contamination. |
+| Parallelism | No | It's one brief and one project, and the pulls are fast. Parallel briefs are planned for M6. |
+| Context-window pressure | No, for now | The trace fits and a run costs about $0.12. Revisit when real data sources replace the fixtures. |
 
 ## 2. Topology
 
-**Pattern:** _single+subagents · sequential · parallel+aggregate · hierarchical_
+**Pattern:** single + subagents (one agent, one validating subagent)
 
 ```
-[ simple text diagram of the flow ]
-e.g.  task → [Research] + [GitHub/Jira reader] → [Writer] → [Critic ✓] → human checkpoint → queued
+[PM brief] → dedupe (repeat → skip, $0)
+          → [Cortex: gather → analyze → draft update + stories]
+          → [Critic: re-pulls, checks]
+              ├ fail / fixes → Cortex (max 2) → at cap: escalate, hold draft
+              └ pass → [PM review checkpoint] → saved, stories queued, nothing posted
 ```
 
 ## 3. Roster
 
 | Agent / subagent | Responsibility | Runs which Loop Spec |
 |---|---|---|
-| _Chief-of-staff (Cortex)_ | _orchestrates + assembles the update_ | _M2 loop_ |
-| _Research subagent_ | _pulls competitive / market context_ | _research loop_ |
-| _GitHub/Jira reader_ | _summarizes recent activity_ | _read loop_ |
-| _Critic / Validator_ | _checks the draft before it advances_ | _validation loop_ |
-| _…_ | | |
+| Cortex | drafts the update and stories, applies fixes | M2 loop, stages 1–3 |
+| Critic | validates the draft | M2 loop, stage 4 |
 
 ## 4. Communication & hand-offs
 
-_What passes between the parts? Any protocol (MCP / A2A, optional, note if used)._
+In-process Python calls; no MCP or A2A.
+
+- **Cortex → critic:** the draft plus the trace (the brief and every tool call and result).
+- **Critic → Cortex:** a JSON verdict with its reasons and fix requests.
+- **To the PM:** a markdown draft that carries the critic's flags.
 
 ## 5. The validator
 
-- **What the critic checks:** _grounded claims · norms compliance · no confidential leak · nothing posted/committed_
-- **Fail action:** _what happens when it fails (retry · revise · escalate to human)_
+- **What the critic checks:** (1) every claim, number, date and status color traces to data the critic re-pulls itself · (2) correct status call ("Status unknown" if no data; "merged", not "shipped") · (3) no committed dates or launch gates; confidential items counted, never named · (4) nothing posted; stories only queued, ≤10, no launch stories · (5) failed pulls flagged; jailbreak refused and escalated
+- **Fail action:** revise. The draft goes back to Cortex with the failures; anything Cortex can't fix is flagged for the PM.
+- **Revision cap:** 2 rounds, then escalate and hold the last draft as "escalated", never "approved".
+- **Pass action:** advances to the PM review checkpoint; never auto-sent.
 
 ## 6. State: shared vs isolated
 
-_What's shared across the fleet vs kept isolated per subagent (carry from M2)._
+- **Shared:** the brief, the raw tool results, and the draft.
+- **Isolated:** Cortex's prompt and reasoning; the critic never sees them. The critic's prompt, re-pulls and reasoning stay with the critic; only its verdict goes back.
+- **Across runs:** only the dedupe ledger and saved drafts. Nothing confidential persists.
 
 ## 7. Cost & latency budget
 
-_Coordination has a price. Rough token/latency cost of the fleet vs a single agent. (Forward-link to M5 bounds.)_
+The critic adds about 2 model calls per draft (one round of re-pulls, then the verdict). A clean pass is about $0.12 per run. At the revision cap (2 rounds) it was $0.43, close to the $0.50 cost cap, so the cost cap is the backstop. The critic adds about 30–60 s per review, so a run at the revision cap takes a few minutes before the PM sees it. These are bounds to enforce in M5.

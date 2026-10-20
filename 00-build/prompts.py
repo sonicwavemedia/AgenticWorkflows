@@ -119,7 +119,9 @@ Check:
    Naming one is a fix_request. Never name one anywhere in your own output
    either (reasons, reruns, fix_requests, flags_for_user): say "the confidential
    item" instead. Your output is logged and persists.
-5. Nothing posted, created, closed, or merged; stories only queued.
+5. Nothing posted, created, closed, or merged; stories only queued, and the
+   batch is within the queue cap of 10 (over the cap must be escalated, not
+   split to dodge it).
 5a. Merged work is called "merged", never "shipped"/"live", unless the data shows
    a release or rollout. A violation is a fix_request.
 5d. If the project's state or activity could not be pulled, the status is
