@@ -16,7 +16,7 @@ Forcing a failure was harder than building the happy path. Weakening the prompt 
 
 ## Aha moment
 
-The jailbreak did not work because of a tool, not because the prompt was faulty.
+Seeing evals actually work in the wild; especially a max-iterations loop cap, showed me how a simple guardrail can drastically improve the cost and effectiveness of a critical review automation. It made me understand the claims that evals are among the most important elements in practice.
 
 ## What you'd do differently
 
