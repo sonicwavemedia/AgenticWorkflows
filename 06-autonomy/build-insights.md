@@ -6,16 +6,18 @@
 
 ## Friction
 
-_Where did the build fight you? (Loop stop conditions? Context budget? The validator? Bounds?)_
+Forcing a failure was harder than building the happy path. Weakening the prompt didn't work, because the model refused to invent dates or metrics. I had to inject the fault at the tool layer (a Sev-1 appearing after the first pull). Also: the course assumed OpenAI, so labs needed translating, and clearing the terminal once cost me a re-run.
 
 ## Learning
 
-_The two or three things you now understand about shipping agents that you didn't before the course._
+1. Deciding what context goes in is the riskiest below-the-line step, because omissions travel further than mistakes.
+2. An independent critic with its own re-pull catches what self-review can't.
+3. Bounds and missing tools, not prompts, are what make bad actions impossible.
 
 ## Aha moment
 
-_The single insight that changed how you'd design your next agent._
+The jailbreak did not work because of a tool, not because the prompt was faulty.
 
 ## What you'd do differently
 
-_If you rebuilt Cortex from scratch, what changes?_
+Write the evals and replay fixtures first, then refine and optimize a critic escalation path that minimized non-green run costs.
